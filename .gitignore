@@ -1,0 +1,16 @@
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Node.js dependencies
+node_modules/
+
+# Local blockchain wallet & certificates
+api/wallet/
+*.id
+
+# OS files
+.DS_Store
+Thumbs.db

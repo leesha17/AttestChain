@@ -1,0 +1,109 @@
+version: '3.7'
+
+networks:
+  attestchain_net:
+    name: attestchain_net
+
+services:
+  orderer.example.com:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=false
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+    ports:
+      - 7050:7050
+    networks:
+      - attestchain_net
+
+  peer0.issuingbank.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.issuingbank.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=attestchain_net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_ID=peer0.issuingbank.com
+      - CORE_PEER_ADDRESS=peer0.issuingbank.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.issuingbank.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.issuingbank.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.issuingbank.com:7051
+      - CORE_PEER_LOCALMSPID=IssuingBankOrgMSP
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/issuingbank.com/peers/peer0.issuingbank.com/msp:/etc/hyperledger/fabric/msp
+    ports:
+      - 7051:7051
+    networks:
+      - attestchain_net
+
+  peer0.partnerbank.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.partnerbank.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=attestchain_net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_ID=peer0.partnerbank.com
+      - CORE_PEER_ADDRESS=peer0.partnerbank.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.partnerbank.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.partnerbank.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.partnerbank.com:8051
+      - CORE_PEER_LOCALMSPID=PartnerBankOrgMSP
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/partnerbank.com/peers/peer0.partnerbank.com/msp:/etc/hyperledger/fabric/msp
+    ports:
+      - 8051:8051
+    networks:
+      - attestchain_net
+
+  peer0.regulator.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.regulator.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=attestchain_net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_ID=peer0.regulator.com
+      - CORE_PEER_ADDRESS=peer0.regulator.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.regulator.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.regulator.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.regulator.com:9051
+      - CORE_PEER_LOCALMSPID=RegulatorOrgMSP
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/regulator.com/peers/peer0.regulator.com/msp:/etc/hyperledger/fabric/msp
+    ports:
+      - 9051:9051
+    networks:
+      - attestchain_net

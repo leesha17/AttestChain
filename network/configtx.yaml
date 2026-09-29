@@ -1,0 +1,151 @@
+---
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admin:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &IssuingBankOrg
+    Name: IssuingBankOrg
+    ID: IssuingBankOrgMSP
+    MSPDir: crypto-config/peerOrganizations/issuingbank.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('IssuingBankOrgMSP.admin', 'IssuingBankOrgMSP.peer', 'IssuingBankOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('IssuingBankOrgMSP.admin', 'IssuingBankOrgMSP.client')"
+      Admin:
+        Type: Signature
+        Rule: "OR('IssuingBankOrgMSP.admin')"
+    AnchorPeers:
+      - Host: peer0.issuingbank.com
+        Port: 7051
+
+  - &PartnerBankOrg
+    Name: PartnerBankOrg
+    ID: PartnerBankOrgMSP
+    MSPDir: crypto-config/peerOrganizations/partnerbank.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PartnerBankOrgMSP.admin', 'PartnerBankOrgMSP.peer', 'PartnerBankOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PartnerBankOrgMSP.admin', 'PartnerBankOrgMSP.client')"
+      Admin:
+        Type: Signature
+        Rule: "OR('PartnerBankOrgMSP.admin')"
+    AnchorPeers:
+      - Host: peer0.partnerbank.com
+        Port: 8051
+
+  - &RegulatorOrg
+    Name: RegulatorOrg
+    ID: RegulatorOrgMSP
+    MSPDir: crypto-config/peerOrganizations/regulator.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('RegulatorOrgMSP.admin', 'RegulatorOrgMSP.peer', 'RegulatorOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('RegulatorOrgMSP.admin')"
+      Admin:
+        Type: Signature
+        Rule: "OR('RegulatorOrgMSP.admin')"
+    AnchorPeers:
+      - Host: peer0.regulator.com
+        Port: 9051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Read:
+      Type: ImplicitMeta
+      Rule: "ANY Read"
+    Write:
+      Type: ImplicitMeta
+      Rule: "ANY Write"
+    Admin:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admin"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.example.com:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.example.com
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+  Organizations:
+  Policies:
+    Read:
+      Type: ImplicitMeta
+      Rule: "ANY Read"
+    Write:
+      Type: ImplicitMeta
+      Rule: "ANY Write"
+    Admin:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admin"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Write"
+
+Profiles:
+  ThreeOrgsOrdererGenesis:
+    <<: *ChannelCapabilities
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *IssuingBankOrg
+          - *PartnerBankOrg
+          - *RegulatorOrg
+  AttestChannel:
+    Consortium: SampleConsortium
+    <<: *ChannelCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *IssuingBankOrg
+        - *PartnerBankOrg
+        - *RegulatorOrg
+      Capabilities:
+        <<: *ApplicationCapabilities

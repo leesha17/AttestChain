@@ -1,0 +1,16 @@
+{
+  "name": "attestchain-api",
+  "version": "1.0.0",
+  "description": "REST API Gateway for AttestChain",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.22.3",
+    "fabric-ca-client": "^2.2.20",
+    "fabric-network": "^2.2.20"
+  }
+}
